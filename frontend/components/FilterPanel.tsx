@@ -25,14 +25,15 @@ const documentTypeOptions = [
 ]
 const levelOptions = ["Group", "Business Unit", "Local"]
 const owningBusinessOptions = [
-  "Legal & Compliance",
-  "Information Technology", 
+  "Financial Reporting",
   "Risk Management",
-  "Procurement",
-  "Human Resources",
-  "Compliance",
-  "Trading",
-  "Credit Risk"
+  "Information Technology",
+  "Corporate Development",
+  "Model Risk Management",
+  "Capital Management",
+  "Capital Planning",
+  "Community Development",
+  "Consumer Compliance"
 ]
 
 export default function FilterPanel({ filters, onFilterChange, onClearAllFilters }: FilterPanelProps) {  const [expandedSections, setExpandedSections] = useState<{

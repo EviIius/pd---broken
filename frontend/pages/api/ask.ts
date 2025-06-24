@@ -95,10 +95,8 @@ Shorter version:`;
         sources,
         context_documents_used: selected_documents?.length || sources.length,
         confidence: '92%' // Higher confidence for focused responses
-      };
-
-      return res.status(200).json(responseData);
-        } catch (error) {
+      };      return res.status(200).json(responseData);
+    } catch (error) {
       console.error('Error calling Gemini API:', error);
       
       // Handle quota exceeded with a helpful mock response
@@ -114,9 +112,15 @@ I'm currently operating in **mock mode** because the Gemini API quota has been e
 - **Risk Management**: Comprehensive frameworks for operational and credit risk
 - **Compliance**: Regular reporting and examination requirements
 
-*Note: This is a demonstration response. The actual AI service will resume when the API quota resets.*`,
-          sources: generateRelevantSources(question),
-          context_documents_used: selectedDocuments?.length || 1,
+*Note: This is a demonstration response. The actual AI service will resume when the API quota resets.*`,          sources: [
+            {
+              title: "Federal Reserve Regulation (Mock Source)",
+              source_url: "https://www.federalreserve.gov/supervisionreg/",
+              regulation_type: "Federal Reserve Guidance",
+              document_type: "Guidelines"
+            }
+          ],
+          context_documents_used: 1,
           confidence: 'mock'
         });
       }

@@ -18,44 +18,47 @@ export default function DocumentList({
   onSelectDocument,
   filters,
 }: DocumentListProps) {  const [searchTerm, setSearchTerm] = useState("");
-
   // Helper function to check if a date matches the publication date filter
   const matchesPublicationDateFilter = (docDate: string, filter: string | null): boolean => {
     if (!filter || filter === "All") return true;
     
     const docDateObj = new Date(docDate);
     const now = new Date();
+    
+    // Set time to start of day for accurate comparisons
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const docDay = new Date(docDateObj.getFullYear(), docDateObj.getMonth(), docDateObj.getDate());
     
     switch (filter) {
       case "Last 7 days":
         const sevenDaysAgo = new Date(today);
         sevenDaysAgo.setDate(today.getDate() - 7);
-        return docDateObj >= sevenDaysAgo;
+        return docDay >= sevenDaysAgo && docDay <= today;
       
       case "Last month":
-        const lastMonth = new Date(today);
-        lastMonth.setMonth(today.getMonth() - 1);
-        return docDateObj >= lastMonth;
+        const lastMonthStart = new Date(today);
+        lastMonthStart.setMonth(today.getMonth() - 1);
+        lastMonthStart.setDate(1); // Start of last month
+        const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0); // End of last month
+        return docDay >= lastMonthStart && docDay <= lastMonthEnd;
       
       case "This month":
-        const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-        return docDateObj >= startOfMonth;
+        const startOfThisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        return docDay >= startOfThisMonth && docDay <= today;
       
       case "Year to date":
         const startOfYear = new Date(today.getFullYear(), 0, 1);
-        return docDateObj >= startOfYear;
+        return docDay >= startOfYear && docDay <= today;
       
       case "Last 12 months":
         const twelveMonthsAgo = new Date(today);
         twelveMonthsAgo.setFullYear(today.getFullYear() - 1);
-        return docDateObj >= twelveMonthsAgo;
+        return docDay >= twelveMonthsAgo && docDay <= today;
       
       default:
         return true;
     }
   };
-
   const filteredDocuments = documents.filter(doc => {
     // Search filter
     const matchesSearch = doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -76,15 +79,29 @@ export default function DocumentList({
     const matchesOwningBusiness = filters.owningBusinessGroup.length === 0 || 
       filters.owningBusinessGroup.includes(doc.owningBusinessGroup);
     
-    return matchesSearch && matchesPublicationDate && matchesDocumentType && 
+    const passesAllFilters = matchesSearch && matchesPublicationDate && matchesDocumentType && 
            matchesLevel && matchesOwningBusiness;
+    
+    // Debug logging for date filtering when a date filter is active
+    if (filters.publicationDate && filters.publicationDate !== "All") {
+      console.log(`Document "${doc.title}" (${doc.publicationDate}): Date filter "${filters.publicationDate}" - ${matchesPublicationDate ? 'PASS' : 'FAIL'}`);
+    }
+    
+    return passesAllFilters;
   });
 
   return (
     <div>      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-semibold text-blue-600">
-          All documents ({filteredDocuments.length} of {documents.length})
-        </h2>
+        <div>
+          <h2 className="text-xl font-semibold text-blue-600">
+            All documents ({filteredDocuments.length} of {documents.length})
+          </h2>
+          {filters.publicationDate && filters.publicationDate !== "All" && (
+            <p className="text-sm text-muted-foreground mt-1">
+              📅 Filtered by: {filters.publicationDate}
+            </p>
+          )}
+        </div>
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground">
             {selectedDocuments.length} document(s) selected

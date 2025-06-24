@@ -13,6 +13,7 @@ interface ChatAssistantProps {
   isExpanded: boolean;
   onToggleExpand: () => void;
   selectedDocuments: Document[];
+  suggestedPrompts?: string[];
 }
 
 interface ChatMessage {
@@ -47,11 +48,17 @@ const ChatMessageBubble: React.FC<{
                 {/* Sources section for assistant messages */}
                 {message.role === 'assistant' && message.sources && message.sources.length > 0 && (
                     <div className="mt-3 pt-3 border-t border-border/50">
-                        <p className="text-xs font-medium text-muted-foreground mb-2">Sources:</p>
-                        <div className="space-y-1">
+                        <p className="text-xs font-medium text-muted-foreground mb-2">Sources:</p>                        <div className="space-y-1">
                             {message.sources.map((source, index) => (
                                 <div key={index} className="text-xs text-muted-foreground">
-                                    <span className="font-medium">{source.title}</span>
+                                    <a 
+                                        href={source.source_url} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        className="font-medium text-blue-600 hover:text-blue-800 hover:underline"
+                                    >
+                                        {source.title}
+                                    </a>
                                     <span className="ml-1 text-blue-600">({source.regulation_type})</span>
                                 </div>
                             ))}
@@ -88,7 +95,7 @@ const ChatMessageBubble: React.FC<{
     );
 };
 
-export default function ChatAssistant({ isExpanded, onToggleExpand, selectedDocuments }: ChatAssistantProps) {
+export default function ChatAssistant({ isExpanded, onToggleExpand, selectedDocuments, suggestedPrompts = [] }: ChatAssistantProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState("");  const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
@@ -264,9 +271,8 @@ export default function ChatAssistant({ isExpanded, onToggleExpand, selectedDocu
                         copiedMessageId={copiedMessageId}
                         onFeedback={handleFeedback}
                     />
-                ))
-            ) : (
-                <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
+                ))            ) : (
+                <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground space-y-4">
                     <MessageSquare className="h-8 w-8 mb-2" />
                     <p>Ask a question about the selected documents</p>
                     <p className="text-sm mt-1">
@@ -274,6 +280,24 @@ export default function ChatAssistant({ isExpanded, onToggleExpand, selectedDocu
                             ? "No documents selected. Select documents to get more accurate answers."
                             : `${selectedDocuments.length} document(s) selected`}
                     </p>
+                    
+                    {/* Suggested Prompts */}
+                    {suggestedPrompts.length > 0 && (
+                        <div className="w-full max-w-md space-y-2 mt-4">
+                            <p className="text-xs font-medium text-muted-foreground">Suggested questions:</p>
+                            <div className="space-y-2">
+                                {suggestedPrompts.map((prompt, index) => (
+                                    <button
+                                        key={index}
+                                        onClick={() => setInputValue(prompt)}
+                                        className="w-full text-left p-3 text-sm bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg border border-blue-200 transition-colors duration-200"
+                                    >
+                                        {prompt}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
         </div>

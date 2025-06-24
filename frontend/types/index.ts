@@ -60,6 +60,7 @@ export interface Document {
   region?: string;
   riskType?: string;
   topic?: string;
+  sourceUrl?: string; // URL to the original document source
 }
 
 export interface AIFeedback {
