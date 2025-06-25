@@ -8,6 +8,8 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { ScrollArea } from "./ui/scroll-area";
 import { ConfirmDialog } from "./ui/confirm-dialog";
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface ChatAssistantProps {
   isExpanded: boolean;
@@ -37,13 +39,36 @@ const ChatMessageBubble: React.FC<{
     onFeedback: (feedback: AIFeedback) => void; 
 }> = ({ message, onCopyToClipboard, copiedMessageId, onFeedback }) => {
     return (
-        <div className={cn("flex items-start gap-3", message.role === "user" ? "justify-end" : "justify-start")}>
-            <div className={cn("rounded-lg px-4 py-3 max-w-[85%] break-words", 
+        <div className={cn("flex items-start gap-3", message.role === "user" ? "justify-end" : "justify-start")}>            <div className={cn("rounded-lg px-4 py-3 max-w-[85%] break-words", 
                 message.role === "user" 
                 ? "bg-primary text-primary-foreground"
                 : "bg-muted"
-            )}>
-                <p className="text-sm">{message.content}</p>
+            )}>                {message.role === "assistant" ? (
+                    <div className="text-sm markdown-content">
+                        <ReactMarkdown 
+                            remarkPlugins={[remarkGfm]}
+                            components={{
+                                // Custom components for better styling
+                                p: ({children}) => <p className="mb-2 last:mb-0">{children}</p>,
+                                h1: ({children}) => <h1 className="text-lg font-bold mb-2">{children}</h1>,
+                                h2: ({children}) => <h2 className="text-base font-bold mb-2">{children}</h2>,
+                                h3: ({children}) => <h3 className="text-sm font-bold mb-1">{children}</h3>,
+                                ul: ({children}) => <ul className="list-disc list-inside mb-2 space-y-1">{children}</ul>,
+                                ol: ({children}) => <ol className="list-decimal list-inside mb-2 space-y-1">{children}</ol>,
+                                li: ({children}) => <li className="text-sm">{children}</li>,
+                                strong: ({children}) => <strong className="font-semibold">{children}</strong>,
+                                em: ({children}) => <em className="italic">{children}</em>,
+                                code: ({children}) => <code className="bg-gray-200 px-1 py-0.5 rounded text-xs font-mono">{children}</code>,
+                                pre: ({children}) => <pre className="bg-gray-100 p-2 rounded text-xs overflow-x-auto mb-2">{children}</pre>,
+                                blockquote: ({children}) => <blockquote className="border-l-4 border-gray-300 pl-4 italic mb-2">{children}</blockquote>,
+                            }}
+                        >
+                            {message.content}
+                        </ReactMarkdown>
+                    </div>
+                ) : (
+                    <p className="text-sm">{message.content}</p>
+                )}
                 
                 {/* Sources section for assistant messages */}
                 {message.role === 'assistant' && message.sources && message.sources.length > 0 && (
@@ -260,18 +285,38 @@ export default function ChatAssistant({ isExpanded, onToggleExpand, selectedDocu
         </div>
       )}
       
-      <ScrollArea className="h-64 p-4" ref={scrollAreaRef}>
-        <div className="space-y-4">
+      <ScrollArea className="h-96 p-4" ref={scrollAreaRef}>        <div className="space-y-4">
             {messages.length > 0 ? (
-                messages.map((message) => (
-                    <ChatMessageBubble 
-                        key={message.id} 
-                        message={message} 
-                        onCopyToClipboard={copyToClipboard} 
-                        copiedMessageId={copiedMessageId}
-                        onFeedback={handleFeedback}
-                    />
-                ))            ) : (
+                <>
+                    {messages.map((message) => (
+                        <ChatMessageBubble 
+                            key={message.id} 
+                            message={message} 
+                            onCopyToClipboard={copyToClipboard} 
+                            copiedMessageId={copiedMessageId}
+                            onFeedback={handleFeedback}
+                        />
+                    ))}
+                      {/* Loading indicator when AI is generating */}
+                    {isLoading && (
+                        <div className="flex items-start gap-3">
+                            <div className="rounded-lg px-4 py-3 max-w-[85%] bg-muted border border-blue-200">
+                                <div className="flex items-center space-x-3">
+                                    <div className="flex space-x-1">
+                                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
+                                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce [animation-delay:0.1s]"></div>
+                                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce [animation-delay:0.2s]"></div>
+                                    </div>
+                                    <span className="text-sm text-blue-600 font-medium">Loading...</span>
+                                </div>
+                                <div className="text-xs text-muted-foreground mt-1">
+                                    Analyzing {selectedDocuments.length > 0 ? `${selectedDocuments.length} selected document(s)` : 'policy documents'}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </>
+            ) : (
                 <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground space-y-4">
                     <MessageSquare className="h-8 w-8 mb-2" />
                     <p>Ask a question about the selected documents</p>
@@ -301,11 +346,10 @@ export default function ChatAssistant({ isExpanded, onToggleExpand, selectedDocu
                 </div>
             )}
         </div>
-      </ScrollArea>      <div className="p-4 border-t">        <form onSubmit={handleSubmit} className="flex items-center gap-3">
-          <Input
+      </ScrollArea>      <div className="p-4 border-t">        <form onSubmit={handleSubmit} className="flex items-center gap-3">          <Input
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Ask a question about the selected documents..."
+            placeholder={isLoading ? "AI is generating response..." : "Ask a question about the selected documents..."}
             className="flex-grow"
             disabled={isLoading}
           />

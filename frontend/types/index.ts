@@ -61,6 +61,8 @@ export interface Document {
   riskType?: string;
   topic?: string;
   sourceUrl?: string; // URL to the original document source
+  summary?: string; // Optional document summary
+  isBookmarked?: boolean; // For bookmarking feature
 }
 
 export interface AIFeedback {

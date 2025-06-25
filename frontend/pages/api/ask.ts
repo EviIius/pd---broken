@@ -100,19 +100,22 @@ Shorter version:`;
       console.error('Error calling Gemini API:', error);
       
       // Handle quota exceeded with a helpful mock response
-      if (error instanceof Error && (error.message.includes('quota') || error.message.includes('429'))) {
-        return res.status(200).json({
-          answer: `**API Quota Exceeded - Mock Response**
+      if (error instanceof Error && (error.message.includes('quota') || error.message.includes('429'))) {        return res.status(200).json({
+          answer: `# API Quota Exceeded - Mock Response
 
 I'm currently operating in **mock mode** because the Gemini API quota has been exceeded. This is a simulated response to demonstrate the application functionality.
 
-**Key Banking Regulation Points:**
+## Key Banking Regulation Points:
+
 - **Capital Requirements**: Banks must maintain minimum capital ratios under Basel III
-- **Liquidity Standards**: LCR and NSFR requirements ensure adequate funding
+- **Liquidity Standards**: LCR and NSFR requirements ensure adequate funding  
 - **Risk Management**: Comprehensive frameworks for operational and credit risk
 - **Compliance**: Regular reporting and examination requirements
 
-*Note: This is a demonstration response. The actual AI service will resume when the API quota resets.*`,          sources: [
+### Important Notes:
+> This is a demonstration response. The actual AI service will resume when the API quota resets.
+
+For more information, please refer to the \`Federal Reserve\` guidance documents.`,sources: [
             {
               title: "Federal Reserve Regulation (Mock Source)",
               source_url: "https://www.federalreserve.gov/supervisionreg/",

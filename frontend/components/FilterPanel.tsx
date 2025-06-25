@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { ChevronDown, ChevronRight } from "lucide-react"
+import { ChevronDown, ChevronRight, Bookmark } from "lucide-react"
 import type { FilterState } from "../types"
 
 interface FilterPanelProps {
@@ -9,6 +9,8 @@ interface FilterPanelProps {
   onFilterChange: (filters: Partial<FilterState>) => void
   onClearFilter: (filterName: keyof FilterState) => void
   onClearAllFilters: () => void
+  showBookmarksOnly: boolean
+  onToggleBookmarksOnly: () => void
 }
 
 const publicationDateOptions = ["All", "Last 7 days", "Last month", "This month", "Year to date", "Last 12 months"]
@@ -23,26 +25,29 @@ const documentTypeOptions = [
   "Methodology",
   "Narrative",
 ]
-const levelOptions = ["Group", "Business Unit", "Local"]
-const owningBusinessOptions = [
-  "Financial Reporting",
-  "Risk Management",
-  "Information Technology",
-  "Corporate Development",
-  "Model Risk Management",
-  "Capital Management",
-  "Capital Planning",
-  "Community Development",
-  "Consumer Compliance"
+const regionOptions = ["US", "EU", "UK", "APAC", "Canada", "LATAM", "Global"]
+const riskTypeOptions = [
+  "Capital Risk",
+  "Compliance Risk", 
+  "Credit Risk",
+  "Cyber Risk",
+  "ESG Risk",
+  "Liquidity Risk",
+  "Market Risk",
+  "Model Risk",
+  "Operational Risk",
+  "Regulatory Risk",
+  "Technology Risk"
 ]
 
-export default function FilterPanel({ filters, onFilterChange, onClearAllFilters }: FilterPanelProps) {  const [expandedSections, setExpandedSections] = useState<{
+export default function FilterPanel({ filters, onFilterChange, onClearAllFilters, showBookmarksOnly, onToggleBookmarksOnly }: FilterPanelProps) {  const [expandedSections, setExpandedSections] = useState<{
     [key: string]: boolean
   }>({
+    bookmarks: true,
     publicationDate: true,
     documentType: true,
-    level: true,
-    owningBusinessGroup: true,
+    region: true,
+    riskType: true,
   })
 
   const toggleSection = (section: string) => {
@@ -69,8 +74,7 @@ export default function FilterPanel({ filters, onFilterChange, onClearAllFilters
     onFilterChange({ [filterName]: newValues } as Partial<FilterState>)
   }
   return (
-    <div>
-      <div className="flex items-center justify-between mb-4">
+    <div>      <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-medium text-blue-600">Filters</h2>
         <button 
           onClick={onClearAllFilters}
@@ -78,6 +82,32 @@ export default function FilterPanel({ filters, onFilterChange, onClearAllFilters
         >
           Clear all
         </button>
+      </div>
+
+      {/* Bookmarks Filter */}
+      <div className="mb-4">
+        <button onClick={() => toggleSection("bookmarks")} className="flex items-center w-full text-left font-semibold">
+          {expandedSections.bookmarks ? (
+            <ChevronDown className="h-4 w-4 mr-1" />
+          ) : (
+            <ChevronRight className="h-4 w-4 mr-1" />
+          )}
+          <span>Bookmarks</span>
+        </button>
+        {expandedSections.bookmarks && (
+          <div className="mt-2 pl-5">
+            <label className="flex items-center space-x-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={showBookmarksOnly}
+                onChange={onToggleBookmarksOnly}
+                className="rounded"
+              />
+              <Bookmark className={`h-4 w-4 ${showBookmarksOnly ? 'text-yellow-600 fill-current' : 'text-gray-400'}`} />
+              <span className="text-sm">Show bookmarked only</span>
+            </label>
+          </div>
+        )}
       </div>
 
       {/* Publication Date */}
@@ -139,31 +169,29 @@ export default function FilterPanel({ filters, onFilterChange, onClearAllFilters
             ))}
           </div>
         )}
-      </div>
-
-      {/* Level */}
+      </div>      {/* Region */}
       <div className="mb-4">
-        <button onClick={() => toggleSection("level")} className="flex items-center w-full text-left font-semibold">
-          {expandedSections.level ? (
+        <button onClick={() => toggleSection("region")} className="flex items-center w-full text-left font-semibold">
+          {expandedSections.region ? (
             <ChevronDown className="h-4 w-4 mr-1" />
           ) : (
             <ChevronRight className="h-4 w-4 mr-1" />
           )}
-          <span>Level</span>
+          <span>Region</span>
         </button>
-        {expandedSections.level && (
+        {expandedSections.region && (
           <div className="mt-2 pl-5 space-y-2">
-            {levelOptions.map((option) => (
+            {regionOptions.map((option) => (
               <div key={option} className="flex items-center">
                 <input
                   type="checkbox"
-                  id={`level-${option.replace(/\s+/g, "-")}`}
+                  id={`region-${option.replace(/\s+/g, "-")}`}
                   value={option}
-                  checked={filters.level.includes(option)}
-                  onChange={(e) => handleCheckboxChange("level", e.target.value, e.target.checked)}
+                  checked={filters.region.includes(option)}
+                  onChange={(e) => handleCheckboxChange("region", e.target.value, e.target.checked)}
                   className="mr-2"
                 />
-                <label htmlFor={`level-${option.replace(/\s+/g, "-")}`} className="text-sm">
+                <label htmlFor={`region-${option.replace(/\s+/g, "-")}`} className="text-sm">
                   {option}
                 </label>
               </div>
@@ -172,29 +200,29 @@ export default function FilterPanel({ filters, onFilterChange, onClearAllFilters
         )}
       </div>
 
-      {/* Owning Business Group */}
+      {/* Risk Type */}
       <div>
-        <button onClick={() => toggleSection("owningBusinessGroup")} className="flex items-center w-full text-left font-semibold">
-          {expandedSections.owningBusinessGroup ? (
+        <button onClick={() => toggleSection("riskType")} className="flex items-center w-full text-left font-semibold">
+          {expandedSections.riskType ? (
             <ChevronDown className="h-4 w-4 mr-1" />
           ) : (
             <ChevronRight className="h-4 w-4 mr-1" />
           )}
-          <span>Owning business</span>
+          <span>Risk type</span>
         </button>
-        {expandedSections.owningBusinessGroup && (
+        {expandedSections.riskType && (
           <div className="mt-2 pl-5 space-y-2">
-            {owningBusinessOptions.map((option) => (
+            {riskTypeOptions.map((option) => (
               <div key={option} className="flex items-center">
                 <input
                   type="checkbox"
-                  id={`owning-business-${option.replace(/\s+/g, "-")}`}
+                  id={`risk-type-${option.replace(/\s+/g, "-")}`}
                   value={option}
-                  checked={filters.owningBusinessGroup.includes(option)}
-                  onChange={(e) => handleCheckboxChange("owningBusinessGroup", e.target.value, e.target.checked)}
+                  checked={filters.riskType.includes(option)}
+                  onChange={(e) => handleCheckboxChange("riskType", e.target.value, e.target.checked)}
                   className="mr-2"
                 />
-                <label htmlFor={`owning-business-${option.replace(/\s+/g, "-")}`} className="text-sm">
+                <label htmlFor={`risk-type-${option.replace(/\s+/g, "-")}`} className="text-sm">
                   {option}
                 </label>
               </div>
