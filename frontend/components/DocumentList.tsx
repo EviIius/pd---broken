@@ -453,9 +453,12 @@ export default function DocumentList({
               </th>
               <th className="p-4 text-left font-medium w-32">ACTIONS</th>
             </tr>
-          </thead><tbody>
-            {paginatedDocuments.map((doc, index) => (
-              <tr key={doc.id} className="border-b hover:bg-muted/30">
+          </thead><tbody>            {paginatedDocuments.map((doc, index) => (
+              <tr 
+                key={doc.id} 
+                id={`document-${doc.id}`}
+                className="border-b hover:bg-muted/30 transition-all duration-300"
+              >
                 <td className="p-4">
                   <input
                     type="checkbox"

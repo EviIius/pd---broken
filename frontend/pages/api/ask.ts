@@ -4,6 +4,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 type RequestData = {
   question: string;
   selected_documents?: string[];
+  use_rag?: boolean;
 };
 
 type ResponseData = {
@@ -13,14 +14,78 @@ type ResponseData = {
     source_url: string;
     regulation_type: string;
     document_type: string;
+    similarity_score?: number;
+    chunk_text?: string;
   }>;
   context_documents_used?: number;
   confidence?: string;
   error?: string;
+  rag_enabled?: boolean;
+  retrieved_chunks?: number;
+};
+
+type RAGSearchResult = {
+  text: string;
+  metadata: {
+    document_id: string;
+    title: string;
+    date: string;
+    type: string;
+    level: string;
+    business_group: string;
+    region: string;
+    risk_type: string;
+    source_link: string;
+  };
+  similarity_score: number;
+  chunk_index: number;
+  token_count: number;
 };
 
 // Initialize Gemini
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+
+// RAG Service Configuration
+const RAG_SERVICE_URL = process.env.RAG_SERVICE_URL || 'http://localhost:8000';
+
+// Helper function to call RAG service
+async function searchRAGDocuments(query: string, top_k: number = 5): Promise<RAGSearchResult[]> {
+  try {
+    const response = await fetch(`${RAG_SERVICE_URL}/search`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query,
+        top_k
+      }),
+    });
+
+    if (!response.ok) {
+      console.warn('RAG service not available, falling back to basic mode');
+      return [];
+    }
+
+    const data = await response.json();
+    return data.results || [];
+  } catch (error) {
+    console.warn('Failed to connect to RAG service:', error);
+    return [];
+  }
+}
+
+// Helper function to check if RAG service is available
+async function checkRAGService(): Promise<boolean> {
+  try {
+    const response = await fetch(`${RAG_SERVICE_URL}/health`, {
+      method: 'GET',
+    });
+    return response.ok;
+  } catch (error) {
+    return false;
+  }
+}
 
 export default async function handler(
   req: NextApiRequest,
@@ -28,7 +93,7 @@ export default async function handler(
 ) {
   if (req.method === 'POST') {
     try {
-      const { question, selected_documents }: RequestData = req.body;
+      const { question, selected_documents, use_rag = true }: RequestData = req.body;
       
       if (!question) {
         return res.status(400).json({ 
@@ -45,16 +110,80 @@ export default async function handler(
         });
       }
 
+      // Check if RAG service is available
+      const ragAvailable = use_rag && await checkRAGService();
+      
       // Get the Gemini model
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-      // Build context from selected documents
-      const documentContext = selected_documents && selected_documents.length > 0
-        ? `\n\nContext Documents Selected: ${selected_documents.join(', ')}`
-        : '';      // Create a specialized prompt for banking regulations
-      const prompt = `You are a banking regulation expert. Answer this question directly and concisely using proper markdown formatting.
+      let context = '';
+      let ragSources: any[] = [];
+      let retrievedChunks = 0;
 
-Question: ${question}${documentContext}
+      if (ragAvailable) {
+        try {
+          // Use RAG service to get relevant document chunks
+          const ragResults = await searchRAGDocuments(question, 5);
+          retrievedChunks = ragResults.length;
+
+          if (ragResults.length > 0) {
+            // Build rich context from retrieved chunks
+            context = ragResults.map((result, index) => 
+              `Document ${index + 1}: ${result.metadata.title}
+Type: ${result.metadata.type} | Risk Type: ${result.metadata.risk_type}
+Relevance: ${(result.similarity_score * 100).toFixed(1)}%
+
+Content:
+${result.text}
+
+---`
+            ).join('\n\n');            // Build sources from RAG results with document navigation
+            ragSources = ragResults.map(result => ({
+              title: result.metadata.title,
+              source_url: result.metadata.source_link || '#',
+              regulation_type: result.metadata.level || 'Banking Regulation',
+              document_type: result.metadata.type,
+              similarity_score: result.similarity_score,
+              chunk_text: result.text.substring(0, 200) + '...',
+              document_id: result.metadata.document_id,
+              document_link: `#document-${result.metadata.document_id}`, // Frontend anchor link
+              view_in_documents: true // Flag to show "View in Documents" link
+            }));
+          }
+        } catch (error) {
+          console.warn('RAG search failed, falling back to basic mode:', error);
+        }
+      }
+
+      // Fallback: Build context from selected documents if no RAG results
+      if (!context && selected_documents && selected_documents.length > 0) {
+        context = `\n\nContext Documents Selected: ${selected_documents.join(', ')}`;
+      }
+
+      // Create enhanced prompt with RAG context or fallback context
+      const prompt = ragAvailable && context ? 
+        `You are a banking regulation expert assistant. Use the provided document context to answer the user's question accurately and comprehensively.
+
+RETRIEVED DOCUMENT CONTEXT:
+${context}
+
+USER QUESTION: ${question}
+
+INSTRUCTIONS:
+- Base your answer primarily on the provided document context above
+- Be specific and cite relevant information from the documents
+- Use **bold text** for key terms and important regulatory concepts
+- Use bullet points for lists of requirements or procedures  
+- Include specific document references when applicable
+- Keep response focused and under 300 words
+- Use proper markdown formatting
+
+If the context doesn't contain sufficient information to answer the question, clearly state what information is missing and provide general guidance based on your banking regulation knowledge.
+
+ANSWER:` :
+        `You are a banking regulation expert. Answer this question directly and concisely using proper markdown formatting.
+
+Question: ${question}${context}
 
 Requirements:
 - Keep response under 150 words
@@ -88,14 +217,18 @@ Shorter version:`;
         }
       }
 
-      // Generate relevant sources based on the question topic
-      const sources = generateRelevantSources(question);      // Mock response structure with Gemini-generated content
+      // Use RAG sources if available, otherwise generate relevant sources
+      const sources = ragSources.length > 0 ? ragSources : generateRelevantSources(question);
+
+      // Enhanced response structure with RAG information
       const responseData: ResponseData = {
         answer,
         sources,
         context_documents_used: selected_documents?.length || sources.length,
-        confidence: '92%' // Higher confidence for focused responses
-      };      return res.status(200).json(responseData);
+        confidence: ragAvailable && retrievedChunks > 0 ? '95%' : '92%',
+        rag_enabled: ragAvailable,
+        retrieved_chunks: retrievedChunks
+      };return res.status(200).json(responseData);
     } catch (error) {
       console.error('Error calling Gemini API:', error);
       

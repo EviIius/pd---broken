@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AIFeedback, Document, FilterState } from '../types';
 import Layout from '../components/Layout';
 import FilterPanel from '../components/FilterPanel';
 import DocumentList from '../components/DocumentList';
 import ChatAssistant from '../components/ChatAssistant';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { fetchDocumentsFromRAG } from '../lib/rag-api';
 
 const sampleDocuments: Document[] = [  {
     id: "1",
@@ -561,6 +562,32 @@ const HomePage: React.FC = () => {
   const [selectedDocuments, setSelectedDocuments] = useState<Document[]>([]);
   const [isChatExpanded, setIsChatExpanded] = useState(true);
   const [showBookmarksOnly, setShowBookmarksOnly] = useState(false);
+  const [isLoadingDocuments, setIsLoadingDocuments] = useState(false);
+
+  // Load documents from RAG service on component mount
+  useEffect(() => {
+    const loadDocuments = async () => {
+      setIsLoadingDocuments(true);
+      try {
+        const ragDocuments = await fetchDocumentsFromRAG();
+        if (ragDocuments.length > 0) {
+          console.log(`Loaded ${ragDocuments.length} documents from RAG service`);
+          setDocuments(ragDocuments);
+        } else {
+          console.log('Using fallback sample documents');
+          // Keep the existing sampleDocuments as fallback
+        }
+      } catch (error) {
+        console.error('Failed to load documents from RAG service:', error);
+        // Keep using sampleDocuments as fallback
+      } finally {
+        setIsLoadingDocuments(false);
+      }
+    };
+
+    loadDocuments();
+  }, []);
+
   const [filters, setFilters] = useState<FilterState>({
     publicationDate: null,
     documentType: [],
