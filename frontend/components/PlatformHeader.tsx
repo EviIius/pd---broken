@@ -107,9 +107,10 @@ export default function PlatformHeader() {
           </div>
         </div>
         
-        <div className="flex items-center space-x-6">
-          {/* Navigation Links */}
+        <div className="flex items-center space-x-6">          {/* Navigation Links */}
           <nav className="flex items-center space-x-4 text-sm">
+            <a href="/" className="hover:underline hover:text-blue-200 transition-colors">Home</a>
+            <a href="/excel" className="hover:underline hover:text-blue-200 transition-colors">Excel Analysis</a>
             <a href="#" className="hover:underline hover:text-blue-200 transition-colors">Dashboard</a>
             <a href="#" className="hover:underline hover:text-blue-200 transition-colors">Policy Library</a>
             <a href="#" className="hover:underline hover:text-blue-200 transition-colors">Analytics</a>

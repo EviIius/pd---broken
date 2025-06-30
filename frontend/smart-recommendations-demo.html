@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Recommendations Demo</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            background: #f8f9fa;
+        }
+        .demo-container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin: 20px 0;
+        }
+        .recommendation-card {
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+            background: #ffffff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        .rec-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+        .rec-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            color: #2d3748;
+        }
+        .rec-icon {
+            width: 16px;
+            height: 16px;
+            color: #6366f1;
+        }
+        .badges {
+            display: flex;
+            gap: 8px;
+        }
+        .badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .badge-high { background: #fee2e2; color: #dc2626; }
+        .badge-medium { background: #fef3c7; color: #d97706; }
+        .badge-powerquery { background: #ede9fe; color: #7c3aed; }
+        .badge-formula { background: #dbeafe; color: #2563eb; }
+        .rec-description {
+            color: #4b5563;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+        .rec-implementation {
+            color: #1d4ed8;
+            font-size: 14px;
+            margin: 10px 0;
+        }
+        .auto-apply-section {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #f3f4f6;
+        }
+        .apply-button {
+            background: #6366f1;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+        .apply-button:hover {
+            background: #4f46e5;
+            transform: translateY(-1px);
+        }
+        .apply-button:disabled {
+            background: #d1d5db;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .helper-text {
+            font-size: 12px;
+            color: #6b7280;
+            margin-left: 10px;
+        }
+        .success-banner {
+            background: #d1fae5;
+            border: 1px solid #a7f3d0;
+            border-radius: 6px;
+            padding: 12px;
+            margin: 15px 0;
+            color: #065f46;
+            font-size: 14px;
+        }
+        .tab-switcher {
+            background: #f3f4f6;
+            border-radius: 8px;
+            padding: 4px;
+            display: inline-flex;
+            margin: 20px 0;
+        }
+        .tab-button {
+            padding: 8px 16px;
+            border: none;
+            background: transparent;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        .tab-button.active {
+            background: white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            color: #1f2937;
+        }
+        .tab-content {
+            display: none;
+            padding: 20px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .generated-code {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 16px;
+            border-radius: 6px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        .step-list {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .step-item {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .step-item:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>🚀 Smart Recommendations with Auto-Apply Demo</h1>
+    
+    <div class="demo-container">
+        <h2>📊 Excel Workbook Analysis Results</h2>
+        <p><strong>File:</strong> Sales_Report_Q1_2024.xlsx</p>
+        <p><strong>Analysis:</strong> 24 formulas detected, 3 sheets, VLOOKUP patterns found</p>
+        
+        <div class="tab-switcher">
+            <button class="tab-button active" onclick="switchTab('analysis')">Analysis</button>
+            <button class="tab-button" onclick="switchTab('powerquery')">PowerQuery</button>
+            <button class="tab-button" onclick="switchTab('formulas')">Formulas</button>
+        </div>
+        
+        <!-- Analysis Tab -->
+        <div id="analysis-tab" class="tab-content active">
+            <h3>💡 Recommendations</h3>
+            <p style="color: #6b7280; margin-bottom: 20px;">Suggestions to improve your Excel workbook</p>
+            
+            <!-- PowerQuery Recommendation -->
+            <div class="recommendation-card">
+                <div class="rec-header">
+                    <div class="rec-title">
+                        <span class="rec-icon">⚡</span>
+                        Automate Data Processing with PowerQuery
+                    </div>
+                    <div class="badges">
+                        <span class="badge badge-high">high</span>
+                        <span class="badge badge-powerquery">powerquery</span>
+                    </div>
+                </div>
+                <div class="rec-description">
+                    24 formulas detected. PowerQuery can automate these transformations
+                </div>
+                <div class="rec-implementation">
+                    Use Data → Get Data → From Other Sources → Blank Query to create automated data pipelines
+                </div>
+                <div class="auto-apply-section">
+                    <button class="apply-button" onclick="applyPowerQueryRecommendation()">
+                        <span>Apply with PowerQuery</span>
+                        <span>→</span>
+                    </button>
+                    <span class="helper-text">Auto-generate M Code</span>
+                </div>
+            </div>
+            
+            <!-- Formula Recommendation -->
+            <div class="recommendation-card">
+                <div class="rec-header">
+                    <div class="rec-title">
+                        <span class="rec-icon">📊</span>
+                        Consolidate Sheet References
+                    </div>
+                    <div class="badges">
+                        <span class="badge badge-medium">medium</span>
+                        <span class="badge badge-formula">formula</span>
+                    </div>
+                </div>
+                <div class="rec-description">
+                    Multiple sheets detected (3). Use dynamic references to improve maintainability
+                </div>
+                <div class="rec-implementation">
+                    Replace hard-coded sheet references with INDIRECT or structured references
+                </div>
+                <div class="auto-apply-section">
+                    <button class="apply-button" onclick="applyFormulaRecommendation()">
+                        <span>Apply with Formula Generator</span>
+                        <span>→</span>
+                    </button>
+                    <span class="helper-text">Auto-generate Excel formulas</span>
+                </div>
+            </div>
+            
+            <!-- Data Validation Recommendation -->
+            <div class="recommendation-card">
+                <div class="rec-header">
+                    <div class="rec-title">
+                        <span class="rec-icon">✅</span>
+                        Implement Data Validation
+                    </div>
+                    <div class="badges">
+                        <span class="badge badge-medium">medium</span>
+                        <span class="badge" style="background: #f3f4f6; color: #374151;">data_validation</span>
+                    </div>
+                </div>
+                <div class="rec-description">
+                    Add validation rules to prevent data entry errors and improve data quality
+                </div>
+                <div class="rec-implementation">
+                    Use Data → Data Validation for critical input fields
+                </div>
+                <div class="auto-apply-section">
+                    <button class="apply-button" disabled>
+                        <span>Manual Implementation Required</span>
+                    </button>
+                    <span class="helper-text">Requires manual Excel setup</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- PowerQuery Tab -->
+        <div id="powerquery-tab" class="tab-content">
+            <div id="powerquery-result" style="display: none;">
+                <div class="success-banner">
+                    ✅ Applied recommendation: Automate Data Processing with PowerQuery
+                </div>
+                
+                <h3>🔧 Generated Transformation Steps</h3>
+                <div class="step-list">
+                    <div class="step-item">
+                        <span><strong>1. Data Cleaning Step</strong> - Clean and standardize data types</span>
+                        <span class="badge badge-powerquery">Applied</span>
+                    </div>
+                    <div class="step-item">
+                        <span><strong>2. Remove Empty Rows</strong> - Remove empty rows from the dataset</span>
+                        <span class="badge badge-powerquery">Applied</span>
+                    </div>
+                </div>
+                
+                <h3>📝 Generated M Code</h3>
+                <div class="generated-code">let
+    Source = Excel.CurrentWorkbook(){[Name="Sales Data"]}[Content],
+    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+    #"Step 1" = Table.TransformColumnTypes(#"Promoted Headers",{
+        {"Date", type date},
+        {"Amount", type number},
+        {"Category", type text}
+    }),
+    #"Step 2" = Table.SelectRows(#"Step 1", each not List.IsEmpty(List.RemoveMatchingItems(Record.FieldValues(_), {"", null})))
+in
+    #"Step 2"</div>
+                
+                <button class="apply-button" onclick="copyCode()">📋 Copy M Code</button>
+                <button class="apply-button" onclick="exportCode()" style="margin-left: 10px;">📥 Export .m File</button>
+            </div>
+            
+            <div id="powerquery-placeholder">
+                <p style="text-align: center; color: #6b7280; padding: 40px;">
+                    Click "Apply with PowerQuery" in the Analysis tab to generate M Code automatically
+                </p>
+            </div>
+        </div>
+        
+        <!-- Formulas Tab -->
+        <div id="formulas-tab" class="tab-content">
+            <div id="formula-result" style="display: none;">
+                <div class="success-banner">
+                    ✅ Applied recommendation: Consolidate Sheet References
+                </div>
+                
+                <h3>📊 Generated Formula</h3>
+                <div class="step-list">
+                    <p><strong>Formula Type:</strong> INDIRECT Reference</p>
+                    <p><strong>Description:</strong> Create dynamic sheet references</p>
+                    <p><strong>Complexity:</strong> Intermediate</p>
+                </div>
+                
+                <h3>📝 Example Formula</h3>
+                <div class="generated-code">=INDIRECT("Sheet1!A1")</div>
+                
+                <h3>⚙️ Parameters</h3>
+                <div class="step-list">
+                    <div class="step-item">
+                        <span><strong>sheet_name:</strong> "Sheet1" (Name of the sheet to reference)</span>
+                    </div>
+                    <div class="step-item">
+                        <span><strong>cell_reference:</strong> A1 (Cell reference to point to)</span>
+                    </div>
+                </div>
+                
+                <button class="apply-button" onclick="copyFormula()">📋 Copy Formula</button>
+            </div>
+            
+            <div id="formula-placeholder">
+                <p style="text-align: center; color: #6b7280; padding: 40px;">
+                    Click "Apply with Formula Generator" in the Analysis tab to generate formulas automatically
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove active class from all buttons
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName + '-tab').classList.add('active');
+            
+            // Add active class to clicked button
+            event.target.classList.add('active');
+        }
+        
+        function applyPowerQueryRecommendation() {
+            // Switch to PowerQuery tab
+            switchTab('powerquery');
+            
+            // Show generated content
+            document.getElementById('powerquery-placeholder').style.display = 'none';
+            document.getElementById('powerquery-result').style.display = 'block';
+            
+            // Update button in analysis
+            event.target.innerHTML = '✅ Applied Successfully';
+            event.target.style.background = '#059669';
+            event.target.disabled = true;
+            
+            alert('✅ PowerQuery steps generated! Switched to PowerQuery tab.');
+        }
+        
+        function applyFormulaRecommendation() {
+            // Switch to Formulas tab
+            switchTab('formulas');
+            
+            // Show generated content
+            document.getElementById('formula-placeholder').style.display = 'none';
+            document.getElementById('formula-result').style.display = 'block';
+            
+            // Update button in analysis
+            event.target.innerHTML = '✅ Applied Successfully';
+            event.target.style.background = '#059669';
+            event.target.disabled = true;
+            
+            alert('✅ Formula template generated! Switched to Formulas tab.');
+        }
+        
+        function copyCode() {
+            const code = `let
+    Source = Excel.CurrentWorkbook(){[Name="Sales Data"]}[Content],
+    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+    #"Step 1" = Table.TransformColumnTypes(#"Promoted Headers",{
+        {"Date", type date},
+        {"Amount", type number},
+        {"Category", type text}
+    }),
+    #"Step 2" = Table.SelectRows(#"Step 1", each not List.IsEmpty(List.RemoveMatchingItems(Record.FieldValues(_), {"", null})))
+in
+    #"Step 2"`;
+            
+            navigator.clipboard.writeText(code).then(() => {
+                alert('📋 M Code copied to clipboard!');
+            });
+        }
+        
+        function exportCode() {
+            const code = `let
+    Source = Excel.CurrentWorkbook(){[Name="Sales Data"]}[Content],
+    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+    #"Step 1" = Table.TransformColumnTypes(#"Promoted Headers",{
+        {"Date", type date},
+        {"Amount", type number},
+        {"Category", type text}
+    }),
+    #"Step 2" = Table.SelectRows(#"Step 1", each not List.IsEmpty(List.RemoveMatchingItems(Record.FieldValues(_), {"", null})))
+in
+    #"Step 2"`;
+            
+            const blob = new Blob([code], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'sales-data-powerquery.m';
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            alert('📥 M Code file downloaded!');
+        }
+        
+        function copyFormula() {
+            const formula = '=INDIRECT("Sheet1!A1")';
+            navigator.clipboard.writeText(formula).then(() => {
+                alert('📋 Formula copied to clipboard!');
+            });
+        }
+        
+        // Add some interactive animations
+        document.addEventListener('DOMContentLoaded', () => {
+            // Animate recommendation cards on load
+            const cards = document.querySelectorAll('.recommendation-card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                
+                setTimeout(() => {
+                    card.style.transition = 'all 0.5s ease-out';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 200);
+            });
+        });
+    </script>
+</body>
+</html>

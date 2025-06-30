@@ -201,7 +201,6 @@ export default function ChatAssistant({ isExpanded, onToggleExpand, selectedDocu
   const [ragStatus, setRagStatus] = useState<'unknown' | 'enabled' | 'disabled'>('unknown');
   const [useRAG, setUseRAG] = useState(true); // Toggle state for RAG mode
   const scrollAreaRef = useRef<HTMLDivElement>(null);
-
   // Check RAG service status on component mount
   useEffect(() => {
     const checkRagStatus = async () => {
@@ -209,7 +208,9 @@ export default function ChatAssistant({ isExpanded, onToggleExpand, selectedDocu
         const response = await fetch('http://localhost:8000/health');
         setRagStatus(response.ok ? 'enabled' : 'disabled');
       } catch (error) {
-        setRagStatus('disabled');
+        // Don't disable Enhanced mode if health check fails - allow fallback
+        console.warn('RAG service health check failed, Enhanced mode will use fallback');
+        setRagStatus('enabled'); // Allow Enhanced mode to work with fallback
       }
     };
     checkRagStatus();
@@ -411,21 +412,19 @@ export default function ChatAssistant({ isExpanded, onToggleExpand, selectedDocu
           {/* Enhanced Toggle Switch */}
           <div className="relative bg-white rounded-lg p-1 shadow-sm border border-slate-200">
             <div className="flex items-center gap-1">
-              {/* RAG Mode Button */}
-              <Button
+              {/* RAG Mode Button */}              <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setUseRAG(true)}
-                disabled={ragStatus === 'disabled'}
                 className={cn(
                   "relative h-8 px-3 text-xs font-medium ai-mode-button focus-enhanced",
                   useRAG && ragStatus === 'enabled' 
                     ? "bg-emerald-500 text-white shadow-md shadow-emerald-200 hover:bg-emerald-600 ai-mode-active" 
                     : useRAG && ragStatus === 'disabled'
-                    ? "bg-amber-100 text-amber-700 cursor-not-allowed opacity-60"
+                    ? "bg-amber-100 text-amber-700 hover:bg-amber-200"
                     : "text-slate-600 hover:bg-emerald-50 hover:text-emerald-700"
                 )}
-                title={ragStatus === 'disabled' ? 'RAG service is not available' : 'Enhanced AI with document search and citations'}
+                title={ragStatus === 'disabled' ? 'Enhanced AI (RAG service unavailable, using fallback)' : 'Enhanced AI with document search and citations'}
               >
                 <Search className="h-3 w-3 mr-1.5" />
                 Enhanced

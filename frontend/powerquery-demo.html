@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PowerQuery M Code Generation Demo</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .demo-section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 14px;
+            margin: 10px 0;
+        }
+        .button {
+            background: #0066cc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        .button:hover {
+            background: #0052a3;
+        }
+        .success {
+            color: #2d7d32;
+            font-weight: bold;
+        }
+        .error {
+            color: #d32f2f;
+            font-weight: bold;
+        }
+        .preview-table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 10px 0;
+        }
+        .preview-table th, .preview-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .preview-table th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        .template-card {
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 10px 0;
+            background: white;
+        }
+        .template-card h4 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+        .template-card p {
+            margin: 5px 0;
+            color: #666;
+        }
+        .badge {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 PowerQuery M Code Generation - Interactive Demo</h1>
+    
+    <div class="demo-section">
+        <h2>📋 Template-Based M Code Generation</h2>
+        <p>Choose from pre-built templates for common data transformations:</p>
+        
+        <div class="template-card">
+            <h4>Data Cleaning</h4>
+            <p>Remove empty rows, trim spaces, and standardize text</p>
+            <span class="badge">data_cleaning</span>
+            <br><br>
+            <button class="button" onclick="generateTemplate('data_cleaning')">Use Template</button>
+            <button class="button" onclick="previewTemplate('data_cleaning')">Preview</button>
+        </div>
+        
+        <div class="template-card">
+            <h4>Pivot Transformation</h4>
+            <p>Transform data from long to wide format</p>
+            <span class="badge">transformation</span>
+            <br><br>
+            <button class="button" onclick="generateTemplate('transformation')">Use Template</button>
+            <button class="button" onclick="previewTemplate('transformation')">Preview</button>
+        </div>
+        
+        <div class="template-card">
+            <h4>Financial Calculations</h4>
+            <p>Add common financial metrics and KPIs</p>
+            <span class="badge">financial</span>
+            <br><br>
+            <button class="button" onclick="generateTemplate('financial')">Use Template</button>
+            <button class="button" onclick="previewTemplate('financial')">Preview</button>
+        </div>
+        
+        <div id="template-result"></div>
+    </div>
+    
+    <div class="demo-section">
+        <h2>🔧 Step-by-Step M Code Builder</h2>
+        <p>Build custom M Code by adding transformation steps:</p>
+        
+        <div>
+            <select id="operation-select">
+                <option value="">Choose operation...</option>
+                <option value="filter">Filter Rows</option>
+                <option value="sort">Sort Data</option>
+                <option value="group">Group By</option>
+                <option value="pivot">Pivot Table</option>
+                <option value="add_column">Add Column</option>
+                <option value="dataTypes">Change Data Types</option>
+            </select>
+            <button class="button" onclick="addStep()">Add Step</button>
+            <button class="button" onclick="generateMCode()">Generate M Code</button>
+            <button class="button" onclick="clearSteps()">Clear All</button>
+        </div>
+        
+        <div id="steps-list"></div>
+        <div id="mcode-result"></div>
+    </div>
+    
+    <div class="demo-section">
+        <h2>📊 Sample Data Preview</h2>
+        <p>Preview how your transformations will affect the data:</p>
+        <div id="data-preview"></div>
+    </div>
+
+    <script>
+        let currentSteps = [];
+        
+        // Sample M Code templates
+        const templates = {
+            data_cleaning: `let
+    Source = Excel.CurrentWorkbook(){[Name="Sheet1"]}[Content],
+    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+    #"Trimmed Text" = Table.TransformColumns(#"Promoted Headers",{},Text.Trim),
+    #"Cleaned Text" = Table.TransformColumns(#"Trimmed Text",{},Text.Clean),
+    #"Removed Empty Rows" = Table.SelectRows(#"Cleaned Text", each not List.IsEmpty(List.RemoveMatchingItems(Record.FieldValues(_), {"", null}))),
+    #"Changed Type" = Table.TransformColumnTypes(#"Removed Empty Rows",{
+        {"Date", type date},
+        {"Amount", type number},
+        {"Category", type text}
+    })
+in
+    #"Changed Type"`,
+            
+            transformation: `let
+    Source = Excel.CurrentWorkbook(){[Name="DataTable"]}[Content],
+    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+    #"Unpivoted Columns" = Table.UnpivotOtherColumns(#"Promoted Headers", {"ID", "Name"}, "Month", "Value"),
+    #"Changed Type" = Table.TransformColumnTypes(#"Unpivoted Columns",{
+        {"ID", Int64.Type},
+        {"Value", type number}
+    }),
+    #"Grouped Rows" = Table.Group(#"Changed Type", {"ID", "Name"}, {
+        {"Total", each List.Sum([Value]), type number},
+        {"Average", each List.Average([Value]), type number}
+    })
+in
+    #"Grouped Rows"`,
+            
+            financial: `let
+    Source = Excel.CurrentWorkbook(){[Name="FinancialData"]}[Content],
+    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{
+        {"Date", type date},
+        {"Revenue", type number},
+        {"Expenses", type number}
+    }),
+    #"Added Net Income" = Table.AddColumn(#"Changed Type", "Net Income", each [Revenue] - [Expenses]),
+    #"Added Margin %" = Table.AddColumn(#"Added Net Income", "Margin %", each [Net Income] / [Revenue])
+in
+    #"Added Margin %"`
+        };
+        
+        const sampleData = {
+            data_cleaning: [
+                ['Date', 'Product', 'Category', 'Amount'],
+                ['2024-01-15', 'Laptop Pro', 'Electronics', 1299.99],
+                ['2024-01-16', 'Wireless Mouse', 'Electronics', 29.99],
+                ['2024-01-17', 'Office Chair', 'Furniture', 249.99]
+            ],
+            transformation: [
+                ['ID', 'Name', 'Total', 'Average'],
+                [1, 'Product A', 15000, 1250],
+                [2, 'Product B', 23000, 1917],
+                [3, 'Product C', 18500, 1542]
+            ],
+            financial: [
+                ['Date', 'Revenue', 'Expenses', 'Net Income', 'Margin %'],
+                ['2024-01-01', 125000, 85000, 40000, '32.0%'],
+                ['2024-02-01', 132000, 88000, 44000, '33.3%'],
+                ['2024-03-01', 145000, 92000, 53000, '36.6%']
+            ]
+        };
+        
+        function generateTemplate(templateType) {
+            const result = document.getElementById('template-result');
+            result.innerHTML = `
+                <h4 class="success">✅ Template Applied: ${templateType.replace('_', ' ').toUpperCase()}</h4>
+                <div class="code-block">${templates[templateType]}</div>
+                <button class="button" onclick="copyToClipboard('${templateType}')">Copy M Code</button>
+                <button class="button" onclick="downloadMCode('${templateType}')">Download .m File</button>
+            `;
+            
+            showDataPreview(sampleData[templateType]);
+        }
+        
+        function previewTemplate(templateType) {
+            const result = document.getElementById('template-result');
+            result.innerHTML = `
+                <h4>👁️ Preview: ${templateType.replace('_', ' ').toUpperCase()}</h4>
+                <div class="code-block">${templates[templateType]}</div>
+                <p><em>Click "Use Template" to apply this transformation.</em></p>
+            `;
+        }
+        
+        function addStep() {
+            const select = document.getElementById('operation-select');
+            const operation = select.value;
+            
+            if (!operation) {
+                alert('Please select an operation first');
+                return;
+            }
+            
+            const step = {
+                id: `step-${Date.now()}`,
+                name: `${operation.charAt(0).toUpperCase() + operation.slice(1)} Step`,
+                operation: operation,
+                mCode: generateStepMCode(operation),
+                description: getStepDescription(operation)
+            };
+            
+            currentSteps.push(step);
+            select.value = '';
+            updateStepsList();
+        }
+        
+        function generateStepMCode(operation) {
+            const mCodeMap = {
+                filter: 'Table.SelectRows(#"Previous Step", each [Column1] = "filter_value")',
+                sort: 'Table.Sort(#"Previous Step",{{"Column1", Order.Ascending}})',
+                group: 'Table.Group(#"Previous Step", {"Column1"}, {{"Count", each Table.RowCount(_), Int64.Type}})',
+                pivot: 'Table.Pivot(#"Previous Step", List.Distinct(#"Previous Step"[Category]), "Category", "Value")',
+                add_column: 'Table.AddColumn(#"Previous Step", "New Column", each [Column1] + [Column2])',
+                dataTypes: 'Table.TransformColumnTypes(#"Previous Step",{{"Column1", type text}, {"Column2", type number}})'
+            };
+            
+            return mCodeMap[operation] || `// ${operation} operation`;
+        }
+        
+        function getStepDescription(operation) {
+            const descriptions = {
+                filter: 'Filter rows based on specified criteria',
+                sort: 'Sort data in ascending or descending order',
+                group: 'Group data and perform aggregations',
+                pivot: 'Transform data from long to wide format',
+                add_column: 'Add calculated or custom columns',
+                dataTypes: 'Change column data types'
+            };
+            
+            return descriptions[operation] || `Apply ${operation} transformation`;
+        }
+        
+        function updateStepsList() {
+            const stepsList = document.getElementById('steps-list');
+            
+            if (currentSteps.length === 0) {
+                stepsList.innerHTML = '<p><em>No steps added yet. Add transformation steps above.</em></p>';
+                return;
+            }
+            
+            stepsList.innerHTML = `
+                <h4>Transformation Steps (${currentSteps.length}):</h4>
+                ${currentSteps.map((step, index) => `
+                    <div style="border: 1px solid #ddd; padding: 10px; margin: 5px 0; border-radius: 4px; background: white;">
+                        <strong>${index + 1}. ${step.name}</strong>
+                        <p style="font-size: 12px; color: #666; margin: 5px 0;">${step.description}</p>
+                        <div class="code-block" style="font-size: 12px;">${step.mCode}</div>
+                        <button class="button" onclick="removeStep(${index})" style="background: #d32f2f;">Remove</button>
+                    </div>
+                `).join('')}
+            `;
+        }
+        
+        function removeStep(index) {
+            currentSteps.splice(index, 1);
+            updateStepsList();
+        }
+        
+        function generateMCode() {
+            if (currentSteps.length === 0) {
+                alert('Add some transformation steps first');
+                return;
+            }
+            
+            let mCode = `let
+    Source = Excel.CurrentWorkbook(){[Name="Sheet1"]}[Content],
+    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),`;
+            
+            currentSteps.forEach((step, index) => {
+                const stepName = `Step ${index + 1}`;
+                const previousStep = index === 0 ? '#"Promoted Headers"' : `#"Step ${index}"`;
+                const stepCode = step.mCode.replace('#"Previous Step"', previousStep);
+                
+                mCode += `
+    #"${stepName}" = ${stepCode},`;
+            });
+            
+            mCode = mCode.slice(0, -1); // Remove trailing comma
+            const lastStepName = `Step ${currentSteps.length}`;
+            mCode += `
+in
+    #"${lastStepName}"`;
+            
+            const result = document.getElementById('mcode-result');
+            result.innerHTML = `
+                <h4 class="success">✅ Generated M Code (${currentSteps.length} steps):</h4>
+                <div class="code-block">${mCode}</div>
+                <button class="button" onclick="copyGeneratedCode()">Copy M Code</button>
+                <button class="button" onclick="downloadGeneratedCode()">Download .m File</button>
+            `;
+            
+            // Show sample preview data
+            const previewData = [
+                ['Product', 'Category', 'Sales', 'Region'],
+                ['Laptop Pro', 'Electronics', 1299.99, 'North'],
+                ['Mouse', 'Electronics', 29.99, 'South'],
+                ['Chair', 'Furniture', 249.99, 'East']
+            ];
+            showDataPreview(previewData);
+        }
+        
+        function clearSteps() {
+            currentSteps = [];
+            updateStepsList();
+            document.getElementById('mcode-result').innerHTML = '';
+            document.getElementById('data-preview').innerHTML = '';
+        }
+        
+        function showDataPreview(data) {
+            if (!data || data.length === 0) return;
+            
+            const preview = document.getElementById('data-preview');
+            const table = `
+                <h4>📊 Data Preview:</h4>
+                <table class="preview-table">
+                    <thead>
+                        <tr>${data[0].map(header => `<th>${header}</th>`).join('')}</tr>
+                    </thead>
+                    <tbody>
+                        ${data.slice(1).map(row => 
+                            `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`
+                        ).join('')}
+                    </tbody>
+                </table>
+                <p><em>Showing ${data.length - 1} rows with ${data[0].length} columns</em></p>
+            `;
+            
+            preview.innerHTML = table;
+        }
+        
+        function copyToClipboard(templateType) {
+            navigator.clipboard.writeText(templates[templateType]).then(() => {
+                alert('M Code copied to clipboard!');
+            });
+        }
+        
+        function copyGeneratedCode() {
+            const codeBlock = document.querySelector('#mcode-result .code-block');
+            if (codeBlock) {
+                navigator.clipboard.writeText(codeBlock.textContent).then(() => {
+                    alert('M Code copied to clipboard!');
+                });
+            }
+        }
+        
+        function downloadMCode(templateType) {
+            const blob = new Blob([templates[templateType]], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${templateType}-powerquery.m`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+        
+        function downloadGeneratedCode() {
+            const codeBlock = document.querySelector('#mcode-result .code-block');
+            if (codeBlock) {
+                const blob = new Blob([codeBlock.textContent], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'custom-powerquery.m';
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+        }
+        
+        // Initialize
+        updateStepsList();
+    </script>
+</body>
+</html>
