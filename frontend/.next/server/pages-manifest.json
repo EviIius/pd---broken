@@ -5,5 +5,5 @@
   "/": "pages/index.js",
   "/api/health": "pages/api/health.js",
   "/excel": "pages/excel.js",
-  "/api/excel/generate-powerquery": "pages/api/excel/generate-powerquery.js"
+  "/policy-qa": "pages/policy-qa.js"
 }

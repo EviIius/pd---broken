@@ -52,7 +52,7 @@ export default function PlatformHeader() {
             onMouseLeave={() => setShowTooltip(false)}
           >
             <h1 className="text-2xl font-bold tracking-wide flex items-center space-x-2">
-              <span>Policy Q&A</span>
+              <span>Re-Gent</span>
               <div className="flex items-center space-x-1 text-xs">
                 {getStatusIcon()}
                 <span>{getStatusText()}</span>
@@ -64,7 +64,7 @@ export default function PlatformHeader() {
               <div className="absolute top-full left-0 mt-2 bg-white text-gray-800 border border-gray-200 shadow-xl rounded-lg p-4 w-80 z-50">
                 <div className="space-y-3">
                   <div>
-                    <h3 className="font-semibold text-lg text-gray-900">Policy Q&A System</h3>
+                    <h3 className="font-semibold text-lg text-gray-900">Re-Gent - Regulatory Intelligence Assistant</h3>
                     <p className="text-sm text-gray-600 mt-1">
                       Intelligent policy document search and Q&A system
                     </p>
@@ -110,6 +110,7 @@ export default function PlatformHeader() {
         <div className="flex items-center space-x-6">          {/* Navigation Links */}
           <nav className="flex items-center space-x-4 text-sm">
             <a href="/" className="hover:underline hover:text-blue-200 transition-colors">Home</a>
+            <a href="/policy-qa" className="hover:underline hover:text-blue-200 transition-colors">Policy Q&A</a>
             <a href="/excel" className="hover:underline hover:text-blue-200 transition-colors">Excel Analysis</a>
             <a href="#" className="hover:underline hover:text-blue-200 transition-colors">Dashboard</a>
             <a href="#" className="hover:underline hover:text-blue-200 transition-colors">Policy Library</a>
