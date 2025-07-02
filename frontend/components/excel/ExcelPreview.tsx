@@ -8,6 +8,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import type { ExcelWorkbook, ExcelWorksheet, ExcelCell } from '../../types/excel';
 
+// Utility function to convert column index to Excel column letters (A, B, C, ..., Z, AA, AB, etc.)
+const getExcelColumnName = (colIndex: number): string => {
+  let result = '';
+  while (colIndex >= 0) {
+    result = String.fromCharCode(65 + (colIndex % 26)) + result;
+    colIndex = Math.floor(colIndex / 26) - 1;
+  }
+  return result;
+};
+
 interface ExcelPreviewProps {
   workbook: ExcelWorkbook;
   activeSheet: ExcelWorksheet | null;
@@ -26,14 +36,116 @@ const ExcelPreview: React.FC<ExcelPreviewProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [maxRows, setMaxRows] = useState<number>(50);
   const [maxCols, setMaxCols] = useState<number>(20);
+  
+  // Drag selection state
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState<{row: number, col: number} | null>(null);
+  const [dragEnd, setDragEnd] = useState<{row: number, col: number} | null>(null);
+  const [dragSelection, setDragSelection] = useState<string[]>([]);
 
-  const getCellStyle = (cell: ExcelCell, address: string) => {
-    const isSelected = selectedCells.includes(address);
+  // Helper function to check if a cell is in the drag range
+  const isInDragRange = (rowIndex: number, colIndex: number, start: {row: number, col: number}, end: {row: number, col: number}) => {
+    const minRow = Math.min(start.row, end.row);
+    const maxRow = Math.max(start.row, end.row);
+    const minCol = Math.min(start.col, end.col);
+    const maxCol = Math.max(start.col, end.col);
+    
+    return rowIndex >= minRow && rowIndex <= maxRow && colIndex >= minCol && colIndex <= maxCol;
+  };
+
+  // Handle mouse down on cell (start drag)
+  const handleMouseDown = (rowIndex: number, colIndex: number, e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+    setDragStart({ row: rowIndex, col: colIndex });
+    setDragEnd({ row: rowIndex, col: colIndex });
+    
+    // Clear previous drag selection
+    setDragSelection([]);
+  };
+
+  // Handle mouse enter on cell (during drag)
+  const handleMouseEnter = (rowIndex: number, colIndex: number) => {
+    if (isDragging && dragStart) {
+      setDragEnd({ row: rowIndex, col: colIndex });
+    }
+  };
+
+  // Handle mouse up (end drag)
+  const handleMouseUp = React.useCallback(() => {
+    if (isDragging && dragStart && dragEnd) {
+      // Calculate all cells in the drag range
+      const newSelection: string[] = [];
+      const minRow = Math.min(dragStart.row, dragEnd.row);
+      const maxRow = Math.max(dragStart.row, dragEnd.row);
+      const minCol = Math.min(dragStart.col, dragEnd.col);
+      const maxCol = Math.max(dragStart.col, dragEnd.col);
+      
+      for (let row = minRow; row <= maxRow; row++) {
+        for (let col = minCol; col <= maxCol; col++) {
+          const address = getCellAddress(row, col);
+          newSelection.push(address);
+        }
+      }
+      
+      // Update drag selection
+      setDragSelection(newSelection);
+      
+      // Notify parent component about selection
+      if (newSelection.length === 1) {
+        onCellSelect(newSelection[0]);
+      }
+    }
+    
+    setIsDragging(false);
+    setDragStart(null);
+    setDragEnd(null);
+  }, [isDragging, dragStart, dragEnd, onCellSelect]);
+
+  // Add global mouse up listener to handle mouse up outside the table
+  React.useEffect(() => {
+    const handleGlobalMouseUp = () => {
+      if (isDragging) {
+        handleMouseUp();
+      }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Clear selections on Escape key
+      if (e.key === 'Escape') {
+        setDragSelection([]);
+        setIsDragging(false);
+        setDragStart(null);
+        setDragEnd(null);
+      }
+    };
+
+    document.addEventListener('mouseup', handleGlobalMouseUp);
+    document.addEventListener('keydown', handleKeyDown);
+    
+    return () => {
+      document.removeEventListener('mouseup', handleGlobalMouseUp);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isDragging, handleMouseUp]);
+
+  // Clear drag selection when switching sheets
+  React.useEffect(() => {
+    setDragSelection([]);
+    setIsDragging(false);
+    setDragStart(null);
+    setDragEnd(null);
+  }, [activeSheet?.id]);
+
+  const getCellStyle = (cell: ExcelCell, address: string, rowIndex: number, colIndex: number) => {
+    const isSelected = selectedCells.includes(address) || dragSelection.includes(address);
     const isFormula = cell.type === 'formula';
+    const isDraggedOver = isDragging && dragStart && dragEnd && 
+      isInDragRange(rowIndex, colIndex, dragStart, dragEnd);
     
-    let className = 'border border-gray-200 p-2 text-sm min-w-[100px] max-w-[200px] truncate ';
+    let className = 'border border-gray-200 p-2 text-sm min-w-[100px] max-w-[200px] truncate cursor-pointer select-none ';
     
-    if (isSelected) {
+    if (isSelected || isDraggedOver) {
       className += 'bg-blue-100 border-blue-400 ';
     } else if (isFormula) {
       className += 'bg-green-50 border-green-200 ';
@@ -188,25 +300,38 @@ const ExcelPreview: React.FC<ExcelPreviewProps> = ({
                         {selectedCells.length} selected
                       </Badge>
                     )}
+                    {dragSelection.length > 0 && (
+                      <Badge variant="default">
+                        {dragSelection.length} drag selected
+                      </Badge>
+                    )}
                   </div>
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="overflow-auto max-h-[600px] border rounded-lg">
+                <div 
+                  className={`overflow-auto max-h-[600px] border rounded-lg ${isDragging ? 'select-none' : ''}`}
+                  onMouseLeave={() => {
+                    // If dragging and mouse leaves table area, continue tracking
+                    if (isDragging) {
+                      // Don't reset drag state, let global mouse up handle it
+                    }
+                  }}
+                >
                   <table className="w-full">
                     <thead className="bg-gray-50 sticky top-0">
                       <tr>
                         <th className="border border-gray-200 p-2 text-xs font-medium text-gray-600 min-w-[50px]">
                           #
                         </th>
-                        {activeSheet.headers.slice(0, maxCols).map((header, colIndex) => (
+                        {Array.from({ length: Math.min(maxCols, activeSheet.headers.length) }, (_, colIndex) => (
                           <th
                             key={colIndex}
                             className="border border-gray-200 p-2 text-xs font-medium text-gray-600 min-w-[100px]"
                           >
                             <div className="flex items-center space-x-1">
                               <span>{getDataTypeIcon(activeSheet.dataTypes[colIndex]?.dataType || 'text')}</span>
-                              <span className="truncate">{header}</span>
+                              <span className="truncate font-bold">{getExcelColumnName(colIndex)}</span>
                             </div>
                           </th>
                         ))}
@@ -223,7 +348,10 @@ const ExcelPreview: React.FC<ExcelPreviewProps> = ({
                             return (
                               <td
                                 key={colIndex}
-                                className={getCellStyle(cell, address)}
+                                className={getCellStyle(cell, address, rowIndex, colIndex)}
+                                onMouseDown={(e) => handleMouseDown(rowIndex, colIndex, e)}
+                                onMouseEnter={() => handleMouseEnter(rowIndex, colIndex)}
+                                onMouseUp={handleMouseUp}
                                 onClick={() => onCellSelect(address)}
                                 title={`${address}: ${formatCellValue(cell)}`}
                               >
@@ -285,7 +413,8 @@ const ExcelPreview: React.FC<ExcelPreviewProps> = ({
                       <div key={index} className="flex items-center justify-between text-sm">
                         <span className="flex items-center space-x-2">
                           <span>{getDataTypeIcon(col.dataType)}</span>
-                          <span className="truncate">{col.header}</span>
+                          <span className="truncate font-bold">{getExcelColumnName(index)}</span>
+                          <span className="text-gray-500 text-xs truncate">({col.header})</span>
                         </span>
                         <Badge variant="outline" className="text-xs">
                           {col.dataType}
@@ -305,7 +434,10 @@ const ExcelPreview: React.FC<ExcelPreviewProps> = ({
                     {activeSheet.dataTypes.map((col) => (
                       <div key={col.columnIndex} className="space-y-1">
                         <div className="flex justify-between text-sm">
-                          <span className="truncate">{col.header}</span>
+                          <span className="truncate">
+                            <span className="font-bold">{getExcelColumnName(col.columnIndex)}</span>
+                            <span className="text-gray-500 ml-1">({col.header})</span>
+                          </span>
                           <span className="text-gray-600">
                             {col.uniqueCount} unique
                           </span>
