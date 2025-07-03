@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, FileSpreadsheet, Zap, Brain, Download, Settings } from 'lucide-react';
+import { Upload, FileSpreadsheet, Zap, Brain, Download, Settings, BarChart3 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
@@ -443,21 +443,11 @@ const ExcelAnalysisPage: React.FC = () => {
             <div className="py-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <FileSpreadsheet className="h-8 w-8 text-green-600" />
+                  <BarChart3 className="h-8 w-8 text-green-600" />
                   <div>
                     <h1 className="text-2xl font-bold text-gray-900">Excel Analysis & Automation</h1>
                     <p className="text-gray-600">Upload Excel files to generate PowerQueries and advanced formulas</p>
                   </div>
-                </div>
-                <div className="flex space-x-3">
-                  <Button variant="outline" size="sm">
-                    <Settings className="h-4 w-4 mr-2" />
-                    Settings
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    <Download className="h-4 w-4 mr-2" />
-                    Export
-                  </Button>
                 </div>
               </div>
             </div>
@@ -471,7 +461,7 @@ const ExcelAnalysisPage: React.FC = () => {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
-                    <Upload className="h-5 w-5 text-blue-600" />
+                    <Upload className="h-5 w-5 text-green-600" />
                     <span>Upload Excel Files</span>
                   </CardTitle>
                   <CardDescription>
@@ -493,7 +483,7 @@ const ExcelAnalysisPage: React.FC = () => {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
-                    <FileSpreadsheet className="h-5 w-5 text-green-600" />
+                    <BarChart3 className="h-5 w-5 text-green-600" />
                     <span>Try Sample Data</span>
                   </CardTitle>                  <CardDescription>
                     Load pre-built Excel workbooks to explore features and test functionality
@@ -605,7 +595,7 @@ const ExcelAnalysisPage: React.FC = () => {
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2 text-lg">
-                      <FileSpreadsheet className="h-5 w-5 text-green-600" />
+                      <BarChart3 className="h-5 w-5 text-green-600" />
                       <span>Advanced Formulas</span>
                     </CardTitle>
                   </CardHeader>
@@ -636,7 +626,7 @@ const ExcelAnalysisPage: React.FC = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
                     <span className="flex items-center space-x-2">
-                      <FileSpreadsheet className="h-5 w-5" />
+                      <BarChart3 className="h-5 w-5" />
                       <span>{state.activeWorkbook.name}</span>
                     </span>
                     <div className="flex space-x-2">

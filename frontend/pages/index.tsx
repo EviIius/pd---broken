@@ -25,37 +25,54 @@ export default function LandingPage() {
             </h2>
             
             {/* Main App Cards */}
-            <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
               {/* Policy Q&A Card */}
               <Link href="/policy-qa">
-                <Card className="group p-8 hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-200 hover:border-blue-300 bg-white hover:bg-blue-50/30 h-80 flex flex-col">
-                  <div className="bg-gradient-to-br from-blue-500 to-blue-600 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                    <BookOpen className="h-8 w-8 text-white" />
+                <Card className="group p-6 hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-200 hover:border-blue-300 bg-white hover:bg-blue-50/30 h-72 flex flex-col">
+                  <div className="bg-gradient-to-br from-blue-500 to-blue-600 w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                    <BookOpen className="h-7 w-7 text-white" />
                   </div>
-                  <h3 className="text-2xl font-semibold mb-4 text-gray-900 group-hover:text-blue-900 transition-colors">Policy Q&A</h3>
-                  <p className="text-gray-600 mb-8 flex-grow leading-relaxed">
+                  <h3 className="text-xl font-semibold mb-3 text-gray-900 group-hover:text-blue-900 transition-colors">Policy Q&A</h3>
+                  <p className="text-gray-600 mb-6 flex-grow leading-relaxed text-sm">
                     Ask questions about banking regulations and get AI-powered answers with source citations
                   </p>
-                  <Button className="w-full bg-blue-600 hover:bg-blue-700 h-12 font-medium text-base shadow-md hover:shadow-lg transition-all">
+                  <Button className="w-full bg-blue-600 hover:bg-blue-700 h-10 font-medium text-sm shadow-md hover:shadow-lg transition-all">
                     Explore Policies
-                    <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                    <BookOpen className="ml-2 h-4 w-4 group-hover:scale-110 transition-transform" />
                   </Button>
                 </Card>
               </Link>
 
               {/* Excel Analysis Card */}
               <Link href="/excel">
-                <Card className="group p-8 hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-200 hover:border-green-300 bg-white hover:bg-green-50/30 h-80 flex flex-col">
-                  <div className="bg-gradient-to-br from-green-500 to-green-600 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                    <BarChart3 className="h-8 w-8 text-white" />
+                <Card className="group p-6 hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-200 hover:border-green-300 bg-white hover:bg-green-50/30 h-72 flex flex-col">
+                  <div className="bg-gradient-to-br from-green-500 to-green-600 w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                    <BarChart3 className="h-7 w-7 text-white" />
                   </div>
-                  <h3 className="text-2xl font-semibold mb-4 text-gray-900 group-hover:text-green-900 transition-colors">Excel Analysis</h3>
-                  <p className="text-gray-600 mb-8 flex-grow leading-relaxed">
+                  <h3 className="text-xl font-semibold mb-3 text-gray-900 group-hover:text-green-900 transition-colors">Excel Analysis</h3>
+                  <p className="text-gray-600 mb-6 flex-grow leading-relaxed text-sm">
                     Upload Excel files for AI-powered analysis, insights, and formula generation
                   </p>
-                  <Button className="w-full bg-green-600 hover:bg-green-700 h-12 font-medium text-base shadow-md hover:shadow-lg transition-all">
+                  <Button className="w-full bg-green-600 hover:bg-green-700 h-10 font-medium text-sm shadow-md hover:shadow-lg transition-all">
                     Analyze Excel Files
-                    <BarChart3 className="ml-2 h-5 w-5 group-hover:scale-110 transition-transform" />
+                    <BarChart3 className="ml-2 h-4 w-4 group-hover:scale-110 transition-transform" />
+                  </Button>
+                </Card>
+              </Link>
+
+              {/* Document Analyzer Card */}
+              <Link href="/document-analyzer">
+                <Card className="group p-6 hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-200 hover:border-purple-300 bg-white hover:bg-purple-50/30 h-72 flex flex-col">
+                  <div className="bg-gradient-to-br from-purple-500 to-purple-600 w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                    <FileText className="h-7 w-7 text-white" />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-3 text-gray-900 group-hover:text-purple-900 transition-colors">Document Analyzer</h3>
+                  <p className="text-gray-600 mb-6 flex-grow leading-relaxed text-sm">
+                    Upload PDF or Word documents to extract structure, headers, and generate insights
+                  </p>
+                  <Button className="w-full bg-purple-600 hover:bg-purple-700 h-10 font-medium text-sm shadow-md hover:shadow-lg transition-all">
+                    Analyze Documents
+                    <FileText className="ml-2 h-4 w-4 group-hover:scale-110 transition-transform" />
                   </Button>
                 </Card>
               </Link>

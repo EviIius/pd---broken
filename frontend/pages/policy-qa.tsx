@@ -4,7 +4,7 @@ import Layout from '../components/Layout';
 import FilterPanel from '../components/FilterPanel';
 import DocumentList from '../components/DocumentList';
 import ChatAssistant from '../components/ChatAssistant';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, BookOpen } from 'lucide-react';
 import { fetchDocumentsFromRAG } from '../lib/rag-api';
 
 const sampleDocuments: Document[] = [  {
@@ -656,36 +656,65 @@ const HomePage: React.FC = () => {
   };
 
   return (
-    <Layout>      <div className="container mx-auto p-6">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div className="lg:col-span-3">
-            <div className="bg-white p-4 rounded-lg shadow-md">              <FilterPanel 
-                filters={filters} 
-                onFilterChange={handleFilterChange} 
-                onClearFilter={handleClearFilter}
-                onClearAllFilters={handleClearAllFilters}
-                showBookmarksOnly={showBookmarksOnly}
-                onToggleBookmarksOnly={handleToggleBookmarksOnly}
-              />
+    <Layout>
+      {/* Top Banner */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="py-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <BookOpen className="h-8 w-8 text-blue-600" />
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900">Policy Q&A Assistant</h1>
+                  <p className="text-gray-600">Ask questions about banking regulations and get AI-powered answers with source citations from our comprehensive policy database.</p>
+                </div>
+              </div>
             </div>
           </div>
-          <div className="lg:col-span-9 space-y-6">
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <ChatAssistant
-                selectedDocuments={selectedDocuments}
-                isExpanded={isChatExpanded}
-                onToggleExpand={() => setIsChatExpanded(!isChatExpanded)}
-                suggestedPrompts={generateSuggestedPrompts(selectedDocuments)}
-              />
+        </div>
+      </div>
+
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+        <div className="container mx-auto px-6 py-8 space-y-8">
+          {/* Main Content Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            {/* Filter Panel */}
+            <div className="lg:col-span-3">
+              <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                <FilterPanel 
+                  filters={filters} 
+                  onFilterChange={handleFilterChange} 
+                  onClearFilter={handleClearFilter}
+                  onClearAllFilters={handleClearAllFilters}
+                  showBookmarksOnly={showBookmarksOnly}
+                  onToggleBookmarksOnly={handleToggleBookmarksOnly}
+                />
+              </div>
             </div>
-            <div className="bg-white p-6 rounded-lg shadow-md">              <DocumentList
-                documents={documents}
-                selectedDocuments={selectedDocuments}
-                onSelectDocument={handleDocumentSelectionChange}
-                onToggleBookmark={handleToggleBookmark}
-                filters={filters}
-                showBookmarksOnly={showBookmarksOnly}
-              />
+
+            {/* Main Content */}
+            <div className="lg:col-span-9 space-y-6">
+              {/* Chat Assistant */}
+              <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                <ChatAssistant
+                  selectedDocuments={selectedDocuments}
+                  isExpanded={isChatExpanded}
+                  onToggleExpand={() => setIsChatExpanded(!isChatExpanded)}
+                  suggestedPrompts={generateSuggestedPrompts(selectedDocuments)}
+                />
+              </div>
+
+              {/* Document List */}
+              <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+                <DocumentList
+                  documents={documents}
+                  selectedDocuments={selectedDocuments}
+                  onSelectDocument={handleDocumentSelectionChange}
+                  onToggleBookmark={handleToggleBookmark}
+                  filters={filters}
+                  showBookmarksOnly={showBookmarksOnly}
+                />
+              </div>
             </div>
           </div>
         </div>

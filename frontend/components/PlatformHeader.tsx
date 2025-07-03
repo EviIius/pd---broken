@@ -112,11 +112,7 @@ export default function PlatformHeader() {
             <a href="/" className="hover:underline hover:text-blue-200 transition-colors">Home</a>
             <a href="/policy-qa" className="hover:underline hover:text-blue-200 transition-colors">Policy Q&A</a>
             <a href="/excel" className="hover:underline hover:text-blue-200 transition-colors">Excel Analysis</a>
-            <a href="#" className="hover:underline hover:text-blue-200 transition-colors">Dashboard</a>
-            <a href="#" className="hover:underline hover:text-blue-200 transition-colors">Policy Library</a>
-            <a href="#" className="hover:underline hover:text-blue-200 transition-colors">Analytics</a>
-            <a href="#" className="hover:underline hover:text-blue-200 transition-colors">Reports</a>
-            <a href="#" className="hover:underline hover:text-blue-200 transition-colors">Settings</a>
+            <a href="/document-analyzer" className="hover:underline hover:text-blue-200 transition-colors">Document Analyzer</a>
           </nav>
           
           {/* Account Section */}
